@@ -16,7 +16,7 @@ var (
 	  <nav class="navbar navbar-inverse">
 	    <div class="container">
 	      <div class="navbar-header">
-		<a class="navbar-brand" href="/">&nbsp;Micro</a>
+		<a class="navbar-brand" href="/">&nbsp;<b>Micro</b></a>
 	      </div>
 	      {{if .StatsURL}}<p class="navbar-text navbar-right"><a href="{{.StatsURL}}" class="navbar-link">Stats</a></p>{{end}}
 	    </div>
@@ -33,7 +33,7 @@ var (
 	        </ul>
 	      </div>
 	      <div class="col-sm-9">
-                <h3>{{ template "heading" . }}</h3>
+                {{ template "heading" . }}
                 {{ template "content" . }}
               </div>
             </div>
@@ -48,16 +48,17 @@ var (
 {{ define "head" }}{{end}}
 {{ define "script" }}{{end}}
 {{ define "title" }}{{end}}
-{{ define "heading" }}&nbsp;{{end}}
+{{ define "heading" }}<h3>&nbsp;</h3>{{end}}
 `
 
 	indexTemplate = `
+{{define "heading"}}<h4><input class="form-control input-lg search" type=text placeholder="Search"/></h4>{{end}}
 {{define "title"}}Web{{end}}
 {{define "content"}}
 	{{if .Results.HasWebServices}}
 		<div>
 			{{range .Results.WebServices}}
-			<a href="/{{.}}" class="btn btn-default btn-lg" style="margin: 5px 3px 5px 3px;">{{.}}</a>
+			<a href="/{{.}}" data-filter={{.}} class="btn btn-default btn-lg" style="margin: 5px 3px 5px 3px;">{{.}}</a>
 			{{end}}
 		</div>
 	{{else}}
@@ -65,6 +66,20 @@ var (
 			<strong>No web services found</strong>
 		</div>
 	{{end}}
+{{end}}
+{{define "script"}}
+<script type="text/javascript">
+jQuery(function($, undefined) {
+	var refs = $('a[data-filter]');
+	$('.search').on('keyup', function() {
+		var val = $.trim(this.value);
+		refs.hide();
+		refs.filter(function() {
+			return $(this).data('filter').search(val) >= 0
+		}).show();
+	});
+});
+</script>
 {{end}}
 `
 	queryTemplate = `
@@ -76,6 +91,8 @@ var (
 {{end}}
 {{define "content"}}
 <div class="row">
+  <div class="panel panel-default">
+    <div class="panel-body">
 	<div class="col-sm-5">
 		<form id="query-form" onsubmit="return query();">
 			<div class="form-group">
@@ -108,14 +125,16 @@ var (
 				<textarea class="form-control" name=request id=request rows=8>{}</textarea>
 			</div>
 			<div class="form-group">
-				<button class="btn btn-default">Go!</button>
+				<button class="btn btn-default">Execute</button>
 			</div>
 		</form>
 	</div>
 	<div class="col-sm-7">
 		<p><b>Response</b></p>
-		<pre id="response">{}</pre>
+		<pre id="response" style="min-height: 405px;">{}</pre>
 	</div>
+    </div>
+  </div>
 </div>
 {{end}}
 {{define "script"}}
@@ -186,19 +205,34 @@ var (
 {{end}}
 `
 	registryTemplate = `
+{{define "heading"}}<h4><input class="form-control input-lg search" type=text placeholder="Search"/></h4>{{end}}
 {{define "title"}}Registry{{end}}
 {{define "content"}}
 	<div>
 		{{range .Results}}
-		<a href="registry?service={{.Name}}" class="btn btn-default btn-lg" style="margin: 5px 3px 5px 3px;">{{.Name}}</a>
+		<a href="registry?service={{.Name}}" data-filter={{.Name}} class="btn btn-default btn-lg" style="margin: 5px 3px 5px 3px;">{{.Name}}</a>
 		{{end}}
 	</div>
+{{end}}
+{{define "script"}}
+<script type="text/javascript">
+jQuery(function($, undefined) {
+	var refs = $('a[data-filter]');
+	$('.search').on('keyup', function() {
+		var val = $.trim(this.value);
+		refs.hide();
+		refs.filter(function() {
+			return $(this).data('filter').search(val) >= 0
+		}).show();
+	});
+});
+</script>
 {{end}}
 `
 
 	serviceTemplate = `
 {{define "title"}}Service{{end}}
-{{define "heading"}}{{with $svc := index .Results 0}}{{$svc.Name}}{{end}}{{end}}
+{{define "heading"}}<h3>{{with $svc := index .Results 0}}{{$svc.Name}}{{end}}</h3>{{end}}
 {{define "content"}}
 	<hr>
 	<h4>Nodes</h4>

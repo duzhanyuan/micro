@@ -186,6 +186,11 @@ func (b *bot) stop() error {
 }
 
 func run(ctx *cli.Context) {
+	// Init plugins
+	for _, p := range Plugins() {
+		p.Init(ctx)
+	}
+
 	// Parse flags
 	if len(ctx.String("inputs")) == 0 {
 		log.Println("[bot] no inputs specified")
@@ -269,12 +274,22 @@ func Commands() []cli.Command {
 		flags = append(flags, input.Flags()...)
 	}
 
-	return []cli.Command{
-		{
-			Name:   "bot",
-			Usage:  "Run the micro bot",
-			Flags:  flags,
-			Action: run,
-		},
+	command := cli.Command{
+		Name:   "bot",
+		Usage:  "Run the micro bot",
+		Flags:  flags,
+		Action: run,
 	}
+
+	for _, p := range Plugins() {
+		if cmds := p.Commands(); len(cmds) > 0 {
+			command.Subcommands = append(command.Subcommands, cmds...)
+		}
+
+		if flags := p.Flags(); len(flags) > 0 {
+			command.Flags = append(command.Flags, flags...)
+		}
+	}
+
+	return []cli.Command{command}
 }
